@@ -1,0 +1,190 @@
+HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singapore Buying & Profit Calculator</title>
+    <!-- Tailwind CSS for Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 min-h-screen font-sans">
+
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+        <!-- HEADER & EXCHANGE RATE -->
+        <div class="bg-white p-6 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-blue-800">Singapore Sourcing & Profit Calculator</h1>
+                <p class="text-sm text-gray-600">භාණ්ඩ මිලදී ගැනීම්, වියදම් සහ ලාභය (Profit & ROI) ගණනය කිරීමේ මෘදුකාංගය</p>
+            </div>
+            <div class="flex items-center gap-2 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <label class="font-semibold text-sm text-blue-900">Exchange Rate (1 SGD = LKR):</label>
+                <input id="exchangeRate" type="number" step="0.01" value="245.00" oninput="calculateAll()" class="w-24 border p-1 rounded text-center font-bold bg-white">
+            </div>
+        </div>
+
+        <!-- ITEMS TABLE CONTAINER -->
+        <div class="bg-white p-6 rounded-lg shadow-md overflow-x-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-gray-800">Purchased Items List</h2>
+                <button onclick="addItemRow()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-blue-700 no-print">+ Add New Item</button>
+            </div>
+
+            <table class="w-full border text-xs min-w-[1000px]">
+                <thead class="bg-gray-200 text-gray-700">
+                    <tr>
+                        <th class="border p-2">Item Description / Model</th>
+                        <th class="border p-2 w-20">Qty (කෑලි)</th>
+                        <th class="border p-2 w-24">SGD Unit Price (SGD එකක්)</th>
+                        <th class="border p-2 w-24">LKR Unit Price (රු. එකක්)</th>
+                        <th class="border p-2 w-28">Total SGD (සම්පූර්ණ SGD)</th>
+                        <th class="border p-2 w-28">Total LKR (සම්පූර්ණ රු.)</th>
+                        <th class="border p-2 w-24">Selling Price / Unit (ලංකාවේ විකුණුම් මිල - එකක්)</th>
+                        <th class="border p-2 w-28">Total Selling Price (සම්පූර්ණ විකුණුම් මිල)</th>
+                        <th class="border p-2 w-28">Profit (ලාභය LKR)</th>
+                        <th class="border p-2 w-20">Profit % (ලාභ ප්‍රතිශතය)</th>
+                        <th class="border p-2 w-12 no-print">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="itemsTbody">
+                    <!-- Rows will be injected here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SUMMARY SECTION (FINAL TOTALS) -->
+        <div class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-6 rounded-lg shadow-lg space-y-4">
+            <h2 class="text-xl font-bold border-b border-blue-700 pb-2">අන්තිම සාරාංශය (Final Summary)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-blue-800 p-4 rounded-lg border border-blue-700">
+                    <div class="text-xs text-blue-200 font-semibold">සම්පූර්ණ වියදම් වුණු සිංගප්පූරු ඩොලර් ගණන (Total SGD)</div>
+                    <div id="sumTotalSGD" class="text-2xl font-bold mt-1">SGD 0.00</div>
+                </div>
+                <div class="bg-blue-800 p-4 rounded-lg border border-blue-700">
+                    <div class="text-xs text-blue-200 font-semibold">සම්පූර්ණ වියදම් වුණු ශ්‍රී ලංකා රුපියල් (Total LKR)</div>
+                    <div id="sumTotalLKR" class="text-2xl font-bold mt-1">Rs. 0.00</div>
+                </div>
+                <div class="bg-emerald-800 p-4 rounded-lg border border-emerald-700">
+                    <div class="text-xs text-emerald-200 font-semibold">සම්පූර්ණ විකුණුම් ආදායම (Total Revenue)</div>
+                    <div id="sumTotalRevenue" class="text-2xl font-bold mt-1">Rs. 0.00</div>
+                </div>
+                <div class="bg-emerald-700 p-4 rounded-lg border border-emerald-600">
+                    <div class="text-xs text-emerald-200 font-semibold">සම්පූර්ණ ලාභය සහ ප්‍රතිශතය (Net Profit & %)</div>
+                    <div id="sumTotalProfit" class="text-2xl font-bold mt-1">Rs. 0.00 <span id="sumProfitPercent" class="text-sm bg-emerald-900 px-2 py-0.5 rounded ml-1">0%</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="flex gap-4 no-print">
+            <button onclick="window.print()" class="bg-gray-800 text-white px-6 py-2 rounded font-semibold hover:bg-black">Print / Save Report</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Sample Initial Data (ඔබට අවශ්‍ය පරිදි වෙනස් කරගත හැක)
+        let items = [
+            { desc: 'Computer Casing ATX', qty: 120, sgdPrice: 9.00, sellPrice: 4500 },
+            { desc: 'Desktop Hard Disc 500GB', qty: 430, sgdPrice: 3.20, sellPrice: 1600 },
+            { desc: '24" Wide Monitor', qty: 212, sgdPrice: 20.00, sellPrice: 9500 }
+        ];
+
+        function renderTable() {
+            const tbody = document.getElementById('itemsTbody');
+            tbody.innerHTML = '';
+            
+            items.forEach((item, index) => {
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50 text-center">
+                        <td class="border p-1"><input type="text" value="${item.desc}" onchange="updateItem(${index}, 'desc', this.value)" class="w-full border px-1 rounded text-left"></td>
+                        <td class="border p-1"><input type="number" value="${item.qty}" onchange="updateItem(${index}, 'qty', this.value)" class="w-full border px-1 rounded text-center"></td>
+                        <td class="border p-1"><input type="number" step="0.01" value="${item.sgdPrice}" onchange="updateItem(${index}, 'sgdPrice', this.value)" class="w-full border px-1 rounded text-right"></td>
+                        <td class="border p-1 bg-gray-100 text-right font-medium" id="lkrUnitPrice_${index}">0.00</td>
+                        <td class="border p-1 bg-gray-100 text-right font-medium" id="totalSGD_${index}">0.00</td>
+                        <td class="border p-1 bg-gray-100 text-right font-medium" id="totalLKR_${index}">0.00</td>
+                        <td class="border p-1"><input type="number" step="1" value="${item.sellPrice}" onchange="updateItem(${index}, 'sellPrice', this.value)" class="w-full border px-1 rounded text-right font-semibold text-blue-700"></td>
+                        <td class="border p-1 bg-gray-100 text-right font-medium" id="totalSell_${index}">0.00</td>
+                        <td class="border p-1 bg-emerald-50 text-right font-bold text-emerald-800" id="profit_${index}">0.00</td>
+                        <td class="border p-1 bg-emerald-50 text-center font-bold text-emerald-800" id="profitPct_${index}">0%</td>
+                        <td class="border p-1 no-print"><button onclick="removeItem(${index})" class="text-red-500 font-bold hover:text-red-700">X</button></td>
+                    </tr>
+                `;
+            });
+            calculateAll();
+        }
+
+        function addItemRow() {
+            items.push({ desc: '', qty: 1, sgdPrice: 0.00, sellPrice: 0 });
+            renderTable();
+        }
+
+        function removeItem(index) {
+            items.splice(index, 1);
+            renderTable();
+        }
+
+        function updateItem(index, field, value) {
+            if (field === 'desc') {
+                items[index][field] = value;
+            } else {
+                items[index][field] = parseFloat(value) || 0;
+            }
+            calculateAll();
+        }
+
+        function calculateAll() {
+            const rate = parseFloat(document.getElementById('exchangeRate').value) || 0;
+            
+            let grandTotalSGD = 0;
+            let grandTotalLKR = 0;
+            let grandTotalRevenue = 0;
+
+            items.forEach((item, index) => {
+                const lkrUnitPrice = item.sgdPrice * rate;
+                const totalSGD = item.sgdPrice * item.qty;
+                const totalLKR = totalSGD * rate;
+                const totalSell = item.sellPrice * item.qty;
+                const profit = totalSell - totalLKR;
+                const profitPct = totalLKR > 0 ? (profit / totalLKR) * 100 : 0;
+
+                grandTotalSGD += totalSGD;
+                grandTotalLKR += totalLKR;
+                grandTotalRevenue += totalSell;
+
+                // Update row outputs
+                document.getElementById(`lkrUnitPrice_${index}`).innerText = lkrUnitPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                document.getElementById(`totalSGD_${index}`).innerText = totalSGD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                document.getElementById(`totalLKR_${index}`).innerText = totalLKR.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                document.getElementById(`totalSell_${index}`).innerText = totalSell.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                
+                const profitEl = document.getElementById(`profit_${index}`);
+                profitEl.innerText = profit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                profitEl.className = `border p-1 text-right font-bold ${profit >= 0 ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'}`;
+
+                document.getElementById(`profitPct_${index}`).innerText = `${profitPct.toFixed(1)}%`;
+            });
+
+            const netProfit = grandTotalRevenue - grandTotalLKR;
+            const netProfitPct = grandTotalLKR > 0 ? (netProfit / grandTotalLKR) * 100 : 0;
+
+            // Update Summary box
+            document.getElementById('sumTotalSGD').innerText = `SGD ${grandTotalSGD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('sumTotalLKR').innerText = `Rs. ${grandTotalLKR.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('sumTotalRevenue').innerText = `Rs. ${grandTotalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            
+            const sumProfitEl = document.getElementById('sumTotalProfit');
+            sumProfitEl.innerHTML = `Rs. ${netProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} <span class="text-xs bg-emerald-900 px-2 py-0.5 rounded ml-1">${netProfitPct.toFixed(1)}%</span>`;
+        }
+
+        // Initial Load
+        renderTable();
+    </script>
+</body>
+</html>
